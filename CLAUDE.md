@@ -79,6 +79,10 @@ Never write implementation code without a failing test already in place. Never s
 
 **This applies to bug fixes too.** When fixing a bug, the first step is always a test that reproduces the bug and fails. Only then write the fix. No exceptions, even for small or obvious fixes.
 
+## Committing Code Changes
+
+Run `make build` before every commit that changes Go source files. This catches compile errors that tests alone may not surface and keeps `bin/slurm-linter` in sync with the committed source.
+
 ## Plans
 
 Store plan files in `/Users/smacmillan/projects/claude/slurm-linter/plans/`.

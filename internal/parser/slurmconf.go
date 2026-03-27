@@ -39,8 +39,8 @@ func ParseSlurmConf(filename string, r io.Reader) (*model.SlurmConfig, error) {
 			return nil, fmt.Errorf("%s:%d: expected Key=Value, got %q", filename, lineNum+1, tokens[0])
 		}
 
-		switch firstKey {
-		case "NodeName":
+		switch strings.ToLower(firstKey) {
+		case "nodename":
 			node := model.NodeDef{
 				Name:   firstVal,
 				Params: make(map[string]string),
@@ -55,7 +55,7 @@ func ParseSlurmConf(filename string, r io.Reader) (*model.SlurmConfig, error) {
 			}
 			cfg.Nodes = append(cfg.Nodes, node)
 
-		case "PartitionName":
+		case "partitionname":
 			part := model.Partition{
 				Name:   firstVal,
 				Params: make(map[string]string),

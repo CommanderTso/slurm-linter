@@ -51,8 +51,9 @@ func main() {
 	checkCmd.Flags().StringVar(&format, "format", "text", "output format: text or json")
 
 	rootCmd := &cobra.Command{
-		Use:   "slurm-linter",
-		Short: "Validate Slurm configuration files",
+		Use:          "slurm-linter",
+		Short:        "Validate Slurm configuration files",
+		SilenceUsage: true,
 	}
 	rootCmd.AddCommand(checkCmd)
 

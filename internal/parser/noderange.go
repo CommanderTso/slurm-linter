@@ -6,6 +6,38 @@ import (
 	"strings"
 )
 
+// SplitNodeList splits a comma-separated list of node expressions into
+// individual expressions, respecting that commas inside bracket groups are
+// part of a range and must not be treated as separators.
+//
+// Examples:
+//
+//	"node01"                              → ["node01"]
+//	"node[01-02,05-06]"                   → ["node[01-02,05-06]"]
+//	"holy8a244[05-06],holy8a245[03-06]"   → ["holy8a244[05-06]", "holy8a245[03-06]"]
+func SplitNodeList(expr string) []string {
+	var parts []string
+	depth := 0
+	start := 0
+	for i := 0; i < len(expr); i++ {
+		switch expr[i] {
+		case '[':
+			depth++
+		case ']':
+			depth--
+		case ',':
+			if depth == 0 {
+				parts = append(parts, expr[start:i])
+				start = i + 1
+			}
+		}
+	}
+	if start < len(expr) {
+		parts = append(parts, expr[start:])
+	}
+	return parts
+}
+
 // ExpandNodeRange expands a Slurm bracket range expression into a list of
 // individual node names.
 //

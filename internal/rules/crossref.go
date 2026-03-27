@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/CommanderTso/slurm-linter/internal/diagnostic"
-	"github.com/CommanderTso/slurm-linter/internal/parser"
 )
 
 // CrossRefRule validates that node names referenced in topology.conf and
@@ -15,9 +14,11 @@ func (r CrossRefRule) Check(input *LintInput) []diagnostic.Diagnostic {
 	var diags []diagnostic.Diagnostic
 
 	// Build a set of all individual node names defined in slurm.conf NodeName stanzas.
+	// Use ResolveNodeList (not ExpandNodeRange) because NodeName= values can contain
+	// comma-separated multi-group lists like "holy8a244[01-06],holy8a245[01-12]".
 	defined := make(map[string]bool)
 	for _, node := range input.Slurm.Nodes {
-		expanded, err := parser.ExpandNodeRange(node.Name)
+		expanded, err := ResolveNodeList(node.Name)
 		if err != nil {
 			diags = append(diags, diagnostic.Diagnostic{
 				Severity: diagnostic.Error,

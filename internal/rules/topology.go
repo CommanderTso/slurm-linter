@@ -151,9 +151,12 @@ func findCycles(edges map[string][]string) []string {
 
 // ResolveNodeList expands a comma-separated list of node range expressions.
 // Exported for use by the cross-reference rule.
+//
+// Uses SplitNodeList to correctly handle commas inside bracket groups
+// (e.g. "node[01-02,11-12]") before expanding each individual expression.
 func ResolveNodeList(expr string) ([]string, error) {
 	var result []string
-	for _, part := range strings.Split(expr, ",") {
+	for _, part := range parser.SplitNodeList(expr) {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue

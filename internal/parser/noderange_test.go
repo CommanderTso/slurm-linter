@@ -7,6 +7,31 @@ import (
 	"github.com/CommanderTso/slurm-linter/internal/parser"
 )
 
+func TestSplitNodeList(t *testing.T) {
+	cases := []struct {
+		expr string
+		want []string
+	}{
+		// single expression, no commas
+		{"node01", []string{"node01"}},
+		// single bracket expression with internal commas — must NOT split inside brackets
+		{"node[01-02,05-06]", []string{"node[01-02,05-06]"}},
+		// two different base names separated by top-level comma
+		{"holy8a244[05-06],holy8a245[03-06]", []string{"holy8a244[05-06]", "holy8a245[03-06]"}},
+		// mixed: internal and top-level commas
+		{"holy8a243[01-02,11-12],holy8a244[01-06]", []string{"holy8a243[01-02,11-12]", "holy8a244[01-06]"}},
+		// plain names
+		{"node01,node02,node03", []string{"node01", "node02", "node03"}},
+	}
+
+	for _, c := range cases {
+		got := parser.SplitNodeList(c.expr)
+		if !reflect.DeepEqual(got, c.want) {
+			t.Errorf("SplitNodeList(%q) = %v, want %v", c.expr, got, c.want)
+		}
+	}
+}
+
 func TestExpandNodeRange(t *testing.T) {
 	cases := []struct {
 		expr string

@@ -15,8 +15,14 @@ type TypeValidation struct{}
 // integerParams lists global params that must be non-negative integers.
 var integerParams = []string{
 	"KillWait", "MaxJobCount", "MinJobAge", "InactiveLimit",
-	"SlurmctldPort", "SlurmdPort", "FirstJobId", "WaitTime",
+	"FirstJobId", "WaitTime",
 }
+
+// portParams lists global params that accept a single port or a range (N-M).
+var portParams = []string{"SlurmctldPort", "SlurmdPort"}
+
+// portRE matches a single non-negative integer or a N-M port range.
+var portRE = regexp.MustCompile(`^\d+(-\d+)?$`)
 
 // enumParams maps param names to their valid values.
 var enumParams = map[string][]string{
@@ -50,6 +56,22 @@ func (r TypeValidation) Check(input *LintInput) []diagnostic.Diagnostic {
 				File:     input.SlurmFile,
 				Line:     cfg.GlobalLines[key],
 				Message:  fmt.Sprintf("%s must be a non-negative integer, got %q", key, val),
+				Rule:     "type-validation",
+			})
+		}
+	}
+
+	for _, key := range portParams {
+		val, ok := cfg.Globals[key]
+		if !ok {
+			continue
+		}
+		if !portRE.MatchString(val) {
+			diags = append(diags, diagnostic.Diagnostic{
+				Severity: diagnostic.Error,
+				File:     input.SlurmFile,
+				Line:     cfg.GlobalLines[key],
+				Message:  fmt.Sprintf("%s must be a port number or range (e.g. 6820 or 6820-6830), got %q", key, val),
 				Rule:     "type-validation",
 			})
 		}

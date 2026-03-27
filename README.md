@@ -5,14 +5,20 @@ A CLI linter for [Slurm](https://slurm.schedmd.com/) configuration files. Valida
 ## Features
 
 - **Required parameter checks** — flags missing `ClusterName`, `SlurmctldHost`, node definitions, and partition definitions
-- **Type validation** — verifies integers, enums (`SchedulerType`, `AuthType`, `SelectType`), and time formats (`INFINITE`, `HH:MM:SS`, `D-HH:MM:SS`)
+- **Type validation** — verifies integers, port numbers/ranges (`SlurmctldPort`, `SlurmdPort`), enums (`SchedulerType`, `AuthType`, `SelectType`), and time formats (`INFINITE`, `HH:MM:SS`, `D-HH:MM:SS`)
 - **Topology graph validation** — detects undefined switch references and cycles in the switch hierarchy
 - **Cross-file validation** — ensures nodes referenced in `topology.conf` and partition stanzas are defined in `slurm.conf`
 - **Text and JSON output** — human-readable by default, JSON for scripting and CI integration
 
 ## Installation
 
-Requires Go 1.22+.
+### Pre-built binaries
+
+Download the latest release for your platform from the [Releases page](https://github.com/CommanderTso/slurm-linter/releases) and place the binary somewhere on your `PATH`.
+
+### Build from source
+
+Requires Go 1.26+.
 
 ```bash
 git clone git@github.com:CommanderTso/slurm-linter.git
@@ -60,6 +66,7 @@ topology.conf:6: error: switch "spine0" references undefined switch "s99" [topol
 | At least one `NodeName` stanza exists | `required-params` |
 | At least one `PartitionName` stanza exists | `required-params` |
 | Integer parameters are valid non-negative integers | `type-validation` |
+| Port parameters (`SlurmctldPort`, `SlurmdPort`) are a port number or range (`N-M`) | `type-validation` |
 | Enum parameters (`SchedulerType`, `AuthType`, `SelectType`, `SwitchType`) have valid values | `type-validation` |
 | Time parameters (`MaxTime`, `DefaultTime`) use valid Slurm time format | `type-validation` |
 | Partition `Nodes=` references are defined in `NodeName` stanzas | `cross-ref` |

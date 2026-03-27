@@ -77,6 +77,8 @@ Before writing any implementation code:
 
 Never write implementation code without a failing test already in place. Never skip the red phase — seeing the failure confirms the test is actually exercising the code.
 
+**This applies to bug fixes too.** When fixing a bug, the first step is always a test that reproduces the bug and fails. Only then write the fix. No exceptions, even for small or obvious fixes.
+
 ## Plans
 
 Store plan files in `/Users/smacmillan/projects/claude/slurm-linter/plans/`.

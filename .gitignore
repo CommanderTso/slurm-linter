@@ -1,0 +1,19 @@
+# Build output
+bin/
+
+# Go test cache and coverage
+*.test
+*.out
+coverage.html
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code local settings (personal overrides, not team config)
+.claude/settings.local.json

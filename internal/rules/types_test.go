@@ -133,3 +133,103 @@ func TestTypeValidation_PortRange_Invalid(t *testing.T) {
 		}
 	}
 }
+
+// TestTypeValidation_AuthType verifies that auth/munge and auth/slurm are valid,
+// and that the removed auth/none is rejected.
+func TestTypeValidation_AuthType(t *testing.T) {
+	rule := rules.TypeValidation{}
+
+	for _, val := range []string{"auth/munge", "auth/slurm"} {
+		input := makeInputWithGlobals(map[string]string{"AuthType": val})
+		if diags := rule.Check(input); len(diags) != 0 {
+			t.Errorf("AuthType=%q: expected no diagnostics, got %v", val, diags)
+		}
+	}
+
+	// auth/none was removed from Slurm and must be flagged
+	input := makeInputWithGlobals(map[string]string{"AuthType": "auth/none"})
+	if diags := rule.Check(input); len(diags) != 1 {
+		t.Errorf("AuthType=auth/none: expected 1 diagnostic, got %d", len(diags))
+	}
+}
+
+// TestTypeValidation_SchedulerType verifies sched/backfill and sched/builtin are valid,
+// and that the removed sched/hold is rejected.
+func TestTypeValidation_SchedulerType(t *testing.T) {
+	rule := rules.TypeValidation{}
+
+	for _, val := range []string{"sched/backfill", "sched/builtin"} {
+		input := makeInputWithGlobals(map[string]string{"SchedulerType": val})
+		if diags := rule.Check(input); len(diags) != 0 {
+			t.Errorf("SchedulerType=%q: expected no diagnostics, got %v", val, diags)
+		}
+	}
+
+	// sched/hold is not listed in current Slurm man page
+	input := makeInputWithGlobals(map[string]string{"SchedulerType": "sched/hold"})
+	if diags := rule.Check(input); len(diags) != 1 {
+		t.Errorf("SchedulerType=sched/hold: expected 1 diagnostic, got %d", len(diags))
+	}
+}
+
+// TestTypeValidation_SelectType verifies select/cons_tres and select/linear are valid,
+// and that the removed legacy select/cons_res is rejected.
+func TestTypeValidation_SelectType(t *testing.T) {
+	rule := rules.TypeValidation{}
+
+	for _, val := range []string{"select/cons_tres", "select/linear"} {
+		input := makeInputWithGlobals(map[string]string{"SelectType": val})
+		if diags := rule.Check(input); len(diags) != 0 {
+			t.Errorf("SelectType=%q: expected no diagnostics, got %v", val, diags)
+		}
+	}
+
+	// select/cons_res is explicitly called legacy and removed in current Slurm
+	input := makeInputWithGlobals(map[string]string{"SelectType": "select/cons_res"})
+	if diags := rule.Check(input); len(diags) != 1 {
+		t.Errorf("SelectType=select/cons_res: expected 1 diagnostic, got %d", len(diags))
+	}
+}
+
+// TestTypeValidation_SwitchType verifies switch/hpe_slingshot and switch/nvidia_imex
+// are valid, and that the removed switch/none and switch/nrt are rejected.
+func TestTypeValidation_SwitchType(t *testing.T) {
+	rule := rules.TypeValidation{}
+
+	for _, val := range []string{"switch/hpe_slingshot", "switch/nvidia_imex"} {
+		input := makeInputWithGlobals(map[string]string{"SwitchType": val})
+		if diags := rule.Check(input); len(diags) != 0 {
+			t.Errorf("SwitchType=%q: expected no diagnostics, got %v", val, diags)
+		}
+	}
+
+	for _, val := range []string{"switch/none", "switch/nrt"} {
+		input := makeInputWithGlobals(map[string]string{"SwitchType": val})
+		if diags := rule.Check(input); len(diags) != 1 {
+			t.Errorf("SwitchType=%q: expected 1 diagnostic, got %d", val, len(diags))
+		}
+	}
+}
+
+// TestTypeValidation_TimeFormat_DaysHours verifies the days-hours and
+// days-hours:minutes time formats are accepted (previously missing from regex).
+func TestTypeValidation_TimeFormat_DaysHours(t *testing.T) {
+	rule := rules.TypeValidation{}
+
+	valid := []string{
+		"INFINITE", "UNLIMITED",
+		"60",          // minutes
+		"1:30",        // minutes:seconds
+		"24:00:00",    // hours:minutes:seconds
+		"7-0",         // days-hours
+		"7-00",        // days-hours (zero-padded)
+		"7-12:30",     // days-hours:minutes
+		"7-12:30:00",  // days-hours:minutes:seconds
+	}
+	for _, val := range valid {
+		input := makeInputWithGlobals(map[string]string{"MaxTime": val})
+		if diags := rule.Check(input); len(diags) != 0 {
+			t.Errorf("MaxTime=%q: expected no diagnostics, got %v", val, diags)
+		}
+	}
+}

@@ -25,19 +25,22 @@ var portParams = []string{"SlurmctldPort", "SlurmdPort"}
 var portRE = regexp.MustCompile(`^\d+(-\d+)?$`)
 
 // enumParams maps param names to their valid values.
+// Values are sourced from the Slurm man page (slurm.conf.5) in the SchedMD repo.
 var enumParams = map[string][]string{
-	"SchedulerType": {"sched/backfill", "sched/builtin", "sched/hold"},
-	"AuthType":      {"auth/munge", "auth/none"},
-	"SelectType":    {"select/linear", "select/cons_res", "select/cons_tres"},
-	"SwitchType":    {"switch/none", "switch/nrt"},
+	"SchedulerType": {"sched/backfill", "sched/builtin"},
+	"AuthType":      {"auth/munge", "auth/slurm"},
+	"SelectType":    {"select/cons_tres", "select/linear"},
+	"SwitchType":    {"switch/hpe_slingshot", "switch/nvidia_imex"},
 }
 
 // timeParams lists global params that must be in Slurm time format.
 var timeParams = []string{"MaxTime", "DefaultTime", "MaxWallDurationPerJob"}
 
-// slurmTimeRE matches: INFINITE | UNLIMITED | minutes | hh:mm | hh:mm:ss | d-hh:mm:ss
+// slurmTimeRE matches all Slurm time formats (from slurm.conf.5 MaxTime description):
+// INFINITE | UNLIMITED | minutes | minutes:seconds | hours:minutes:seconds |
+// days-hours | days-hours:minutes | days-hours:minutes:seconds
 var slurmTimeRE = regexp.MustCompile(
-	`^(INFINITE|UNLIMITED|\d+|\d+:\d{2}|\d+:\d{2}:\d{2}|\d+-\d+:\d{2}:\d{2})$`,
+	`^(INFINITE|UNLIMITED|\d+|\d+:\d{2}|\d+:\d{2}:\d{2}|\d+-\d+|\d+-\d+:\d{2}|\d+-\d+:\d{2}:\d{2})$`,
 )
 
 func (r TypeValidation) Check(input *LintInput) []diagnostic.Diagnostic {
@@ -103,7 +106,7 @@ func (r TypeValidation) Check(input *LintInput) []diagnostic.Diagnostic {
 				Severity: diagnostic.Error,
 				File:     input.SlurmFile,
 				Line:     cfg.GlobalLines[key],
-				Message:  fmt.Sprintf("%s has invalid time format %q (expected INFINITE, minutes, HH:MM:SS, or D-HH:MM:SS)", key, val),
+				Message:  fmt.Sprintf("%s has invalid time format %q (expected INFINITE, minutes, MM:SS, HH:MM:SS, D-HH, D-HH:MM, or D-HH:MM:SS)", key, val),
 				Rule:     "type-validation",
 			})
 		}

@@ -4,7 +4,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-A linter for Slurm HPC workload manager job scripts. Analyzes `#SBATCH` directives and job script contents to catch errors, warn about misconfigurations, and enforce site-specific policies.
+A CLI linter for Slurm HPC workload manager configuration files. Validates `slurm.conf` and `topology.conf`, reporting errors and warnings about missing required parameters, type/enum mismatches, topology graph problems, and cross-file node reference inconsistencies.
+
+## Module
+
+`github.com/CommanderTso/slurm-linter`
+
+## Common Commands
+
+```bash
+make build        # build → bin/slurm-linter
+make test         # go test ./...
+make test-v       # verbose test output
+make lint         # go vet ./...
+
+# Run the linter
+./bin/slurm-linter check --conf slurm.conf --topology topology.conf
+./bin/slurm-linter check --conf slurm.conf --format json
+
+# Run a single test package
+go test ./internal/rules/...
+
+# Run a single test
+go test ./internal/parser/... -run TestExpandNodeRange
+```
+
+## Architecture
+
+Strict separation between parsing, validation, and reporting. Data flows in one direction: files → parsers → model → rules → diagnostics → reporter.
+
+### Key packages
+
+| Package | Role |
+|---------|------|
+| `internal/model` | Pure data types: `SlurmConfig`, `NodeDef`, `Partition`, `TopologyConfig`, `Switch` |
+| `internal/parser` | Parses files into model types. `noderange.go` expands bracket expressions like `node[01-04,06]`. `slurmconf.go` handles globals, `NodeName=` and `PartitionName=` stanzas, and line continuation. `topology.go` parses `SwitchName=` stanzas. |
+| `internal/rules` | One file per rule domain. Each rule implements `Rule.Check(*LintInput) []Diagnostic`. `LintInput` carries both parsed configs; `Topology` may be nil. |
+| `internal/validator` | Orchestrates rules. `DefaultRules()` returns the standard rule set. `New(rules...)` for custom sets. |
+| `internal/reporter` | `Text` and `JSON` reporters, both implement the `Reporter` interface. |
+| `internal/diagnostic` | `Diagnostic` struct and `Severity` type (Info/Warning/Error). |
+| `cmd/slurm-linter` | cobra CLI. `--conf` (required), `--topology` (optional), `--format text|json`. Exit codes: 0=clean, 1=warnings, 2=errors. |
+
+### Adding a new lint rule
+
+1. Create `internal/rules/myrule.go` with a struct implementing `Check(*LintInput) []diagnostic.Diagnostic`
+2. Write `internal/rules/myrule_test.go` first (TDD)
+3. Add the rule to `DefaultRules()` in `internal/validator/validator.go`
+
+### slurm.conf parsing notes
+
+- `NodeName=` and `PartitionName=` lines carry multiple `Key=Value` pairs on one line — they are parsed into `NodeDef` and `Partition` structs, not globals
+- Line continuation with `\` is handled in `readLines()`
+- `GlobalLines` map tracks line numbers for accurate diagnostic reporting
 
 ## Reference Documentation
 

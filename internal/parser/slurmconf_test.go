@@ -65,6 +65,33 @@ func TestParseSlurmConf_Partitions(t *testing.T) {
 	}
 }
 
+// TestParseSlurmConf_SpacesAroundEquals verifies that Slurm's allowed
+// "Key = Value" syntax (spaces around =) is parsed correctly.
+func TestParseSlurmConf_SpacesAroundEquals(t *testing.T) {
+	input := "ClusterName = testcluster\nSlurmctldHost = controller\n" +
+		"NodeName = node01 CPUs = 4\n" +
+		"PartitionName = compute Nodes = node01\n"
+	cfg, err := parser.ParseSlurmConf("slurm.conf", strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := cfg.Globals["ClusterName"]; got != "testcluster" {
+		t.Errorf("ClusterName = %q, want %q", got, "testcluster")
+	}
+	if got := cfg.Globals["SlurmctldHost"]; got != "controller" {
+		t.Errorf("SlurmctldHost = %q, want %q", got, "controller")
+	}
+	if len(cfg.Nodes) != 1 || cfg.Nodes[0].Name != "node01" {
+		t.Errorf("expected 1 node named node01, got %v", cfg.Nodes)
+	}
+	if cfg.Nodes[0].Params["CPUs"] != "4" {
+		t.Errorf("CPUs = %q, want %q", cfg.Nodes[0].Params["CPUs"], "4")
+	}
+	if len(cfg.Partitions) != 1 || cfg.Partitions[0].Name != "compute" {
+		t.Errorf("expected 1 partition named compute, got %v", cfg.Partitions)
+	}
+}
+
 func TestParseSlurmConf_LineContinuation(t *testing.T) {
 	input := "ClusterName=my\\\ncluster\n"
 	cfg, err := parser.ParseSlurmConf("slurm.conf", strings.NewReader(input))

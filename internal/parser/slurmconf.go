@@ -107,9 +107,36 @@ func readLines(r io.Reader) ([]string, error) {
 	return logical, scanner.Err()
 }
 
-// splitTokens splits a line into whitespace-separated tokens.
+// splitTokens splits a line into Key=Value tokens.
+// Slurm allows spaces around the equals sign ("Key = Value"), so after
+// splitting on whitespace we merge any standalone "=" token with the
+// preceding key and the following value to produce a single "Key=Value" token.
 func splitTokens(line string) []string {
-	return strings.Fields(line)
+	raw := strings.Fields(line)
+	var out []string
+	for i := 0; i < len(raw); i++ {
+		tok := raw[i]
+		if tok == "=" {
+			// merge previous token + "=" + next token
+			if len(out) == 0 || i+1 >= len(raw) {
+				out = append(out, tok) // malformed; leave as-is for error reporting
+				continue
+			}
+			out[len(out)-1] = out[len(out)-1] + "=" + raw[i+1]
+			i++ // skip the value token we just consumed
+		} else if j := strings.Index(tok, "="); j == len(tok)-1 {
+			// token ends with "=", e.g. "Key=" — value is next token
+			if i+1 < len(raw) && raw[i+1] != "=" {
+				out = append(out, tok+raw[i+1])
+				i++
+			} else {
+				out = append(out, tok)
+			}
+		} else {
+			out = append(out, tok)
+		}
+	}
+	return out
 }
 
 // splitKeyValue splits "Key=Value" into ("Key", "Value", true).

@@ -92,8 +92,11 @@ func readLines(r io.Reader) ([]string, error) {
 
 	for scanner.Scan() {
 		raw := scanner.Text()
-		if strings.HasSuffix(raw, "\\") {
-			current.WriteString(strings.TrimSuffix(raw, "\\"))
+		// Trim trailing whitespace before checking for continuation backslash.
+		// Editors commonly leave trailing spaces after the \ in "Key=Value \  ".
+		trimmed := strings.TrimRight(raw, " \t")
+		if strings.HasSuffix(trimmed, "\\") {
+			current.WriteString(strings.TrimSuffix(trimmed, "\\"))
 			logical = append(logical, "") // placeholder preserves line numbering
 		} else {
 			current.WriteString(raw)

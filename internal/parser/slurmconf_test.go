@@ -102,3 +102,22 @@ func TestParseSlurmConf_LineContinuation(t *testing.T) {
 		t.Errorf("ClusterName with continuation = %q, want %q", got, "mycluster")
 	}
 }
+
+// TestParseSlurmConf_LineContinuationTrailingSpace verifies that a backslash
+// followed by trailing whitespace is still treated as a line continuation.
+// Real-world slurm.conf files commonly have "\ " at end of continuation lines.
+func TestParseSlurmConf_LineContinuationTrailingSpace(t *testing.T) {
+	// The " \  " after \ simulates trailing whitespace that editors leave behind.
+	input := "NodeName=node[01-04] \\  \n    CPUs=4 RealMemory=8000 State=UNKNOWN\n" +
+		"PartitionName=compute Nodes=node[01-04]\n"
+	cfg, err := parser.ParseSlurmConf("slurm.conf", strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(cfg.Nodes) != 1 {
+		t.Fatalf("expected 1 node, got %d", len(cfg.Nodes))
+	}
+	if cfg.Nodes[0].Params["CPUs"] != "4" {
+		t.Errorf("CPUs = %q, want %q", cfg.Nodes[0].Params["CPUs"], "4")
+	}
+}

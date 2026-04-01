@@ -20,4 +20,4 @@ coverage:
 	@echo "Coverage report written to coverage.html"
 
 clean:
-	rm -rf bin/ coverage.out coverage.html
+	rm -rf bin/ dist/ coverage.out coverage.html

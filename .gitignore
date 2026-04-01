@@ -1,5 +1,6 @@
-# Build output
+# Build output (bin/ is the canonical output directory; dist/ is not used)
 bin/
+dist/
 
 # Go test cache and coverage
 *.test

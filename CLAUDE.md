@@ -80,6 +80,10 @@ Never write implementation code without a failing test already in place. Never s
 
 **This applies to bug fixes too.** When fixing a bug, the first step is always a test that reproduces the bug and fails. Only then write the fix. No exceptions, even for small or obvious fixes.
 
+## Build Output Directory
+
+`bin/` is the canonical output directory for all build artifacts — this is the Go convention. Do not use `dist/` or any other directory. The local development binary is always `bin/slurm-linter`. Cross-compiled release binaries (e.g. for GitHub Releases) should also be written to `bin/` (e.g. `bin/slurm-linter-linux-amd64`). Both `bin/` and `dist/` are gitignored.
+
 ## Committing Code Changes
 
 Run `make build` before every commit that changes Go source files. This catches compile errors that tests alone may not surface and keeps `bin/slurm-linter` in sync with the committed source.

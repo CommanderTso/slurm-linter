@@ -1,5 +1,8 @@
 # slurm-linter
 
+[![CI](https://github.com/CommanderTso/slurm-linter/actions/workflows/ci.yml/badge.svg)](https://github.com/CommanderTso/slurm-linter/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/CommanderTso/slurm-linter/branch/main/graph/badge.svg)](https://codecov.io/gh/CommanderTso/slurm-linter)
+
 A CLI linter for [Slurm](https://slurm.schedmd.com/) configuration files. Validates `slurm.conf` and `topology.conf`, catching common errors before they cause cluster problems.
 
 ## Features

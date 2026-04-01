@@ -1,4 +1,4 @@
-.PHONY: build test test-v lint clean
+.PHONY: build test test-v lint clean coverage
 
 BIN := bin/slurm-linter
 
@@ -14,5 +14,10 @@ test-v:
 lint:
 	go vet ./...
 
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report written to coverage.html"
+
 clean:
-	rm -rf bin/
+	rm -rf bin/ coverage.out coverage.html

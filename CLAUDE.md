@@ -17,6 +17,7 @@ make build        # build → bin/slurm-linter
 make test         # go test ./...
 make test-v       # verbose test output
 make lint         # go vet ./...
+make coverage     # run tests with coverage → coverage.html
 
 # Run the linter
 ./bin/slurm-linter check --conf slurm.conf --topology topology.conf
